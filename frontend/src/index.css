@@ -1,0 +1,68 @@
+:root {
+  /* Color tokens — "signal room" palette: a monitoring-room dark, not a pure-black default */
+  --bg-void: #0b0e14;
+  --bg-panel: #12161f;
+  --bg-panel-raised: #1a212c;
+  --border-hair: #232b38;
+  --border-hair-bright: #313c4d;
+
+  --text-primary: #e6eaf0;
+  --text-muted: #8b95a7;
+  --text-dim: #565f70;
+
+  --accent-threat: #ff8a3d;   /* amber — active threats, escalation */
+  --accent-threat-dim: #7a4726;
+  --accent-safe: #4fd1c5;     /* cyan-teal — cleared / nominal */
+  --accent-safe-dim: #29524d;
+  --accent-critical: #ef5350; /* reserved for critical severity only */
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-safe);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Reduced motion respected app-wide */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,1 +1,0 @@
-// Frontend Threat Dashboard entry point
