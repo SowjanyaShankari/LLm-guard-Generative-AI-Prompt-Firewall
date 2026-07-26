@@ -1,0 +1,7 @@
+# Needs Python 3.11 or newer.
+# On Python 3.9 pip caps scikit-learn at 1.6.1, which prints harmless but noisy
+# overflow warnings from CalibratedClassifierCV. 1.7+ fixed that.
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.7
+scipy>=1.13
