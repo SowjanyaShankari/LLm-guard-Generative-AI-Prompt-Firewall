@@ -5,12 +5,23 @@ from backend.rules import calculate_risk
 from backend.telemetry import log_prompt
 from fastapi import Header
 from backend.auth import verify_api_key
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create FastAPI application
 app = FastAPI(
     title="LLM-Guard",
     description="Generative AI Prompt Firewall",
     version="1.0.0"
+)
+
+# Enable CORS for Frontend Dashboard
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"], # Added 3000 as a backup dev port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
