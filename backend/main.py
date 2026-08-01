@@ -1,12 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from backend.validation import validate_prompt
 from backend.rules import calculate_risk
 from backend.telemetry import log_prompt
-from fastapi import Header
 from backend.auth import verify_api_key
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 # Create FastAPI application
 app = FastAPI(
@@ -18,19 +16,17 @@ app = FastAPI(
 # Enable CORS for Frontend Dashboard
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"], # Added 3000 as a backup dev port
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Added 3000 as a backup dev port
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # -----------------------------
 # Request Model
 # -----------------------------
 class PromptRequest(BaseModel):
     prompt: str
-
 
 # -----------------------------
 # Health Check Endpoint
@@ -42,7 +38,6 @@ def home():
         "status": "Running"
     }
 
-
 @app.get("/health")
 def health():
     return {
@@ -50,7 +45,6 @@ def health():
         "service": "LLM-Guard",
         "version": "1.0.0"
     }
-
 
 # -----------------------------
 # Prompt Scan Endpoint
@@ -60,19 +54,14 @@ def scan_prompt(
     request: PromptRequest,
     x_api_key: str = Header(...)
 ):
-
     verify_api_key(x_api_key)
-
     validation = validate_prompt(request.prompt)
-
     rules = calculate_risk(validation)
-
     log = log_prompt(
         request.prompt,
         rules["risk_score"],
         rules["action"]
     )
-
     return {
         "prompt": request.prompt,
         "validation": validation,
