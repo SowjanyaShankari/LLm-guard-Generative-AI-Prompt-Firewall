@@ -1,6 +1,16 @@
 import React from 'react';
 
-export default function Topbar({ title }) {
+const STATUS_MAP = {
+  open: { label: 'ONLINE', color: 'var(--accent-safe)' },
+  connecting: { label: 'CHECKING', color: '#e0b84f' },
+  closed: { label: 'UNREACHABLE', color: 'var(--accent-threat)' }
+};
+
+// healthStatus comes from useHealth() in App.jsx, polling the real
+// GET /health route on the backend.
+export default function Topbar({ title, healthStatus = 'connecting' }) {
+  const status = STATUS_MAP[healthStatus] ?? STATUS_MAP.connecting;
+
   return (
     <header style={styles.bar}>
       <div>
@@ -10,15 +20,9 @@ export default function Topbar({ title }) {
 
       <div style={styles.statusGroup}>
         <div style={styles.statusItem}>
-          <span style={styles.pulseDot} />
+          <span style={{ ...styles.pulseDot, background: status.color }} />
           <span className="mono" style={styles.statusText}>
-            PROXY: ONLINE
-          </span>
-        </div>
-        <div style={styles.statusItem}>
-          <span style={{ ...styles.pulseDot, background: 'var(--accent-safe)' }} />
-          <span className="mono" style={styles.statusText}>
-            SCANNER: ONLINE
+            BACKEND: {status.label}
           </span>
         </div>
       </div>
@@ -45,35 +49,10 @@ const styles = {
     flexWrap: 'wrap',
     gap: 12
   },
-  title: {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 600
-  },
-  subtitle: {
-    margin: '2px 0 0 0',
-    fontSize: 12,
-    color: 'var(--text-muted)'
-  },
-  statusGroup: {
-    display: 'flex',
-    gap: 16
-  },
-  statusItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8
-  },
-  pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    background: 'var(--accent-safe)',
-    animation: 'guard-pulse 2s infinite'
-  },
-  statusText: {
-    fontSize: 11,
-    color: 'var(--text-muted)',
-    letterSpacing: '0.04em'
-  }
+  title: { margin: 0, fontSize: 18, fontWeight: 600 },
+  subtitle: { margin: '2px 0 0 0', fontSize: 12, color: 'var(--text-muted)' },
+  statusGroup: { display: 'flex', gap: 16 },
+  statusItem: { display: 'flex', alignItems: 'center', gap: 8 },
+  pulseDot: { width: 8, height: 8, borderRadius: '50%', animation: 'guard-pulse 2s infinite' },
+  statusText: { fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.04em' }
 };

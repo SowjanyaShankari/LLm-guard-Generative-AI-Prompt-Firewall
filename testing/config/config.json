@@ -1,0 +1,21 @@
+{
+    "api": {
+        "base_url": "http://localhost:8000",
+        "endpoint": "/api/chat",
+        "timeout": 10,
+        "retry": 3
+    },
+
+    "logging": {
+        "level": "INFO",
+        "directory": "logs"
+    },
+
+    "reports": {
+        "directory": "reports"
+    },
+
+    "datasets": {
+        "directory": "datasets"
+    }
+}
