@@ -72,3 +72,16 @@ y_test = test["y"].to_numpy()
 
 evaluate.report("TEST at default 0.5 threshold", y_test, test_scores, 0.5)
 evaluate.report("TEST at our tuned threshold", y_test, test_scores, threshold)
+import joblib
+import os
+
+os.makedirs("../models", exist_ok=True)
+
+joblib.dump({
+    "model": model,
+    "word_tfidf": word_tfidf,
+    "char_tfidf": char_tfidf,
+    "scaler": scaler
+}, "../models/jailbreak_classifier.pkl")
+
+print("Model saved successfully!")
