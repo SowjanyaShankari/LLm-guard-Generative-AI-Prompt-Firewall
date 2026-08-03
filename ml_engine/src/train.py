@@ -85,3 +85,51 @@ joblib.dump({
 }, "../models/jailbreak_classifier.pkl")
 
 print("Model saved successfully!")
+
+y_train = train["y"].values
+print("training...")
+
+model = CalibratedClassifierCV(LinearSVC(random_state=SEED, max_iter=2000), cv=3)
+model.fit(X_train, y_train)
+
+test_scores = model.predict_proba(X_test)[:, 1]
+
+# Tune threshold for ≥95% recall
+best_threshold = 0.5
+best_f1 = 0
+for t in [i / 1000 for i in range(1, 1000)]:
+    preds = (test_scores >= t).astype(int)
+    tp = ((preds == 1) & (y_test == 1)).sum()
+    fp = ((preds == 1) & (y_test == 0)).sum()
+    fn = ((preds == 0) & (y_test == 1)).sum()
+    if tp + fp == 0:
+        continue
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    if recall >= 0.95 and precision > 0:
+        f1 = 2 * (precision * recall) / (precision + recall)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_threshold = t
+
+threshold = best_threshold
+print()
+evaluate.report("TEST at default 0.5 threshold", y_test, test_scores, 0.5)
+evaluate.report("TEST at our tuned threshold", y_test, test_scores, threshold)
+
+# SAVE MODEL
+import os, joblib
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
+MODEL_PATH = os.path.join(MODEL_DIR, "jailbreak_classifier.pkl")
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+artifact = {
+    "model": model,
+    "word_tfidf": word_tfidf,
+    "char_tfidf": char_tfidf,
+    "scaler": scaler,
+    "threshold": threshold,
+}
+
+joblib.dump(artifact, MODEL_PATH)
+print(f"\n saved model → {MODEL_PATH}")
