@@ -36,10 +36,20 @@ export default function PromptTester({ onSubmit, submitting }) {
         </button>
       </form>
       {lastResult && (
-        <div className="mono" style={styles.resultBox}>
-          action: {lastResult.rules.action} · risk score: {lastResult.rules.risk_score}
-        </div>
-      )}
+  <div className="mono" style={styles.resultBox}>
+    {lastResult.status === "blocked" ? (
+      <>
+        <div><strong>Status:</strong> BLOCKED</div>
+        <div><strong>Reason:</strong> {lastResult.reason}</div>
+      </>
+    ) : (
+      <>
+        <div><strong>Action:</strong> {lastResult.rules.action}</div>
+        <div><strong>Risk Score:</strong> {lastResult.rules.risk_score}</div>
+      </>
+    )}
+  </div>
+)}
     </section>
   );
 }

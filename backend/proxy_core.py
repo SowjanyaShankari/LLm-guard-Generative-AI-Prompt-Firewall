@@ -6,6 +6,15 @@ Defines request/response contracts.
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from dotenv import load_dotenv
+from openai import AsyncOpenAI
+import os
+
+load_dotenv()
+
+client = AsyncOpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
 # ===== REQUEST SCHEMAS =====
 
