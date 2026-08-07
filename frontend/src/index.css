@@ -1,68 +1,58 @@
 :root {
-  /* Color tokens — "signal room" palette: a monitoring-room dark, not a pure-black default */
-  --bg-void: #0b0e14;
-  --bg-panel: #12161f;
-  --bg-panel-raised: #1a212c;
-  --border-hair: #232b38;
-  --border-hair-bright: #313c4d;
+  --bg-main: #0B1220;
+  --bg-sidebar: #111827;
+  --bg-panel: #162032;
+  --bg-panel-raised: #1F2937;
 
-  --text-primary: #e6eaf0;
-  --text-muted: #8b95a7;
-  --text-dim: #565f70;
+  --border-hair: #2B3648;
+  --border-hair-bright: #3B4558;
 
-  --accent-threat: #ff8a3d;   /* amber — active threats, escalation */
-  --accent-threat-dim: #7a4726;
-  --accent-safe: #4fd1c5;     /* cyan-teal — cleared / nominal */
-  --accent-safe-dim: #29524d;
-  --accent-critical: #ef5350; /* reserved for critical severity only */
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
 
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --accent-safe: #22C55E;
+  --accent-safe-dim: rgba(34,197,94,.15);
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --accent-warning: #F59E0B;
+  --accent-warning-dim: rgba(245,158,11,.15);
+
+  --accent-critical: #EF4444;
+  --accent-critical-dim: rgba(239,68,68,.15);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+
+  --font-mono: Consolas, monospace;
 }
 
-* {
-  box-sizing: border-box;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
+body{
+    background:var(--bg-main);
+    color:var(--text-primary);
+    font-family:Segoe UI, Arial, sans-serif;
 }
 
-body {
-  background: var(--bg-void);
-  color: var(--text-primary);
-  font-family: var(--font-display);
-  -webkit-font-smoothing: antialiased;
+button{
+    cursor:pointer;
+    transition:.25s;
 }
 
-button,
-input,
-select {
-  font-family: inherit;
+button:hover{
+    transform:translateY(-2px);
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--accent-safe);
-  outline-offset: 2px;
+::-webkit-scrollbar{
+    width:8px;
 }
 
-.mono {
-  font-family: var(--font-mono);
-}
-
-/* Reduced motion respected app-wide */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
+::-webkit-scrollbar-thumb{
+    background:#334155;
+    border-radius:8px;
 }
