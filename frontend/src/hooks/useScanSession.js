@@ -31,7 +31,13 @@ export function useScanSession() {
 
     try {
       const result = await postScan(promptText);
-      const action = result.rules.action; // ALLOW | WARN | BLOCK
+      let action = "ALLOW";
+
+if (result.status === "blocked") {
+  action = "BLOCK";
+} else {
+  action = result.rules.action;
+} // ALLOW | WARN | BLOCK
       const now = new Date();
 
       setTotals((prev) => ({
