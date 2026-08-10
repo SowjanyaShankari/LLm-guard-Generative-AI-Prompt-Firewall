@@ -1,0 +1,3 @@
+# Don't touch line endings in the dataset. 1,071 prompts have newlines inside
+# quoted fields, and Windows checkout would rewrite them and change the features.
+*.csv -text
