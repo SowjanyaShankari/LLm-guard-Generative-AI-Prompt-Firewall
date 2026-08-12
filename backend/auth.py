@@ -84,3 +84,6 @@ def check_rate_limit(user: UserContext):
     request_history[client_identifier] = recent_requests
     
     return True
+
+    # Backward compatibility for existing backend endpoints
+verify_api_key = get_current_user

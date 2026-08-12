@@ -1,58 +1,258 @@
+/* =========================================================
+   LLM-GUARD — Professional SOC Dashboard Theme
+   ========================================================= */
+
 :root {
-  --bg-main: #0B1220;
-  --bg-sidebar: #111827;
-  --bg-panel: #162032;
-  --bg-panel-raised: #1F2937;
+  --bg-main: #07111f;
+  --bg-panel: #0b1728;
+  --bg-panel-raised: #101f33;
+  --bg-panel-hover: #14263d;
 
-  --border-hair: #2B3648;
-  --border-hair-bright: #3B4558;
+  --border-hair: #1c3048;
+  --border-hair-bright: #29435f;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
+  --text-primary: #e8f0f7;
+  --text-secondary: #a8b8c8;
+  --text-muted: #718398;
+  --text-dim: #526579;
 
-  --accent-safe: #22C55E;
-  --accent-safe-dim: rgba(34,197,94,.15);
+  --accent-safe: #32d583;
+  --accent-safe-dim: rgba(50, 213, 131, 0.12);
 
-  --accent-warning: #F59E0B;
-  --accent-warning-dim: rgba(245,158,11,.15);
+  --accent-threat: #ff5c69;
+  --accent-threat-dim: rgba(255, 92, 105, 0.12);
 
-  --accent-critical: #EF4444;
-  --accent-critical-dim: rgba(239,68,68,.15);
+  --accent-warning: #f5b942;
+  --accent-warning-dim: rgba(245, 185, 66, 0.12);
+
+  --accent-info: #4ea1ff;
+  --accent-info-dim: rgba(78, 161, 255, 0.12);
 
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 
-  --font-mono: Consolas, monospace;
+  --font-main:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+
+  --font-mono:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
 }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
 }
 
-body{
-    background:var(--bg-main);
-    color:var(--text-primary);
-    font-family:Segoe UI, Arial, sans-serif;
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
 }
 
-button{
-    cursor:pointer;
-    transition:.25s;
+html {
+  background: var(--bg-main);
 }
 
-button:hover{
-    transform:translateY(-2px);
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 80% 0%,
+      rgba(35, 100, 160, 0.12),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      #07111f 0%,
+      #081422 50%,
+      #06101c 100%
+    );
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar{
-    width:8px;
+/* =========================================================
+   TEXT
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
 }
 
-::-webkit-scrollbar-thumb{
-    background:#334155;
-    border-radius:8px;
+button,
+textarea,
+input {
+  font-family: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #243a52;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #34516e;
+}
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+::selection {
+  background: rgba(50, 213, 131, 0.2);
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   FORM ELEMENTS
+   ========================================================= */
+
+textarea,
+input {
+  outline: none;
+}
+
+textarea:focus,
+input:focus {
+  border-color: var(--accent-safe) !important;
+  box-shadow: 0 0 0 3px rgba(50, 213, 131, 0.08);
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button {
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a {
+  color: var(--accent-info);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   DASHBOARD ANIMATIONS
+   ========================================================= */
+
+@keyframes guard-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes guard-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(50, 213, 131, 0.45);
+  }
+
+  70% {
+    box-shadow: 0 0 0 7px rgba(50, 213, 131, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(50, 213, 131, 0);
+  }
+}
+
+@keyframes guard-glow {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    overflow-x: hidden;
+  }
 }

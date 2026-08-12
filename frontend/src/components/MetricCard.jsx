@@ -1,109 +1,161 @@
-import React from "react";
-import {
-  FaCheckCircle,
-  FaShieldAlt,
-  FaExclamationTriangle,
-  FaChartLine
-} from "react-icons/fa";
+import React from 'react';
 
 export default function MetricCard({
   label,
   value,
-  tone = "safe"
+  tone = 'safe'
 }) {
+  const isThreat = tone === 'threat';
 
-  let icon = <FaChartLine />;
-  let color = "#3B82F6";
+  const accent = isThreat
+    ? 'var(--accent-threat)'
+    : 'var(--accent-safe)';
 
-  if (label.toLowerCase().includes("scanned")) {
-    icon = <FaChartLine />;
-    color = "#3B82F6";
-  }
-
-  if (label.toLowerCase().includes("blocked")) {
-    icon = <FaShieldAlt />;
-    color = "#EF4444";
-  }
-
-  if (label.toLowerCase().includes("flagged")) {
-    icon = <FaExclamationTriangle />;
-    color = "#F59E0B";
-  }
-
-  if (tone === "safe") {
-    color = "#22C55E";
-  }
+  const icon = isThreat ? '⚠' : '✓';
 
   return (
-    <div style={styles.card}>
-
+    <div
+      style={{
+        ...styles.card,
+        '--card-accent': accent
+      }}
+    >
+      {/* Accent line */}
       <div
         style={{
-          ...styles.iconBox,
-          background: color
+          ...styles.accentBar,
+          background: accent
         }}
-      >
-        {icon}
-      </div>
+      />
 
-      <div style={styles.info}>
+      <div style={styles.body}>
+        {/* Top row */}
+        <div style={styles.topRow}>
+          <span style={styles.label}>
+            {label}
+          </span>
 
-        <div style={styles.label}>
-          {label}
+          <span
+            style={{
+              ...styles.icon,
+              color: accent,
+              borderColor: accent
+            }}
+          >
+            {icon}
+          </span>
         </div>
 
-        <div style={styles.value}>
+        {/* Metric value */}
+        <div className="mono" style={styles.value}>
           {value}
         </div>
 
-      </div>
+        {/* Status */}
+        <div style={styles.statusRow}>
+          <span
+            style={{
+              ...styles.statusDot,
+              background: accent
+            }}
+          />
 
+          <span style={styles.statusText}>
+            {isThreat ? 'Security event detected' : 'Operating normally'}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
 
 const styles = {
-
   card: {
-    background: "#162032",
-    border: "1px solid #263244",
-    borderRadius: 16,
-    padding: 20,
-    display: "flex",
-    alignItems: "center",
-    gap: 18,
-    minWidth: 240,
-    flex: "1 1 240px",
-    boxShadow: "0 4px 15px rgba(0,0,0,.25)",
-    transition: ".25s"
+    position: 'relative',
+    display: 'flex',
+    minWidth: 220,
+    flex: '1 1 220px',
+    minHeight: 138,
+    overflow: 'hidden',
+
+    background:
+      'linear-gradient(145deg, rgba(17,32,52,0.98), rgba(8,20,35,0.98))',
+
+    border: '1px solid var(--border-hair)',
+    borderRadius: 'var(--radius-md)',
+
+    boxShadow:
+      '0 8px 25px rgba(0,0,0,0.15)',
+
+    transition:
+      'transform 0.2s ease, border-color 0.2s ease'
   },
 
-  iconBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 14,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    fontSize: 28,
-    color: "#fff"
+  accentBar: {
+    width: 4,
+    minWidth: 4
   },
 
-  info: {
-    display: "flex",
-    flexDirection: "column"
+  body: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: '16px 17px'
+  },
+
+  topRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10
   },
 
   label: {
-    color: "#94A3B8",
-    fontSize: 13,
-    marginBottom: 6
+    fontSize: 11,
+    color: 'var(--text-muted)',
+    letterSpacing: '0.03em',
+    fontWeight: 500
+  },
+
+  icon: {
+    width: 25,
+    height: 25,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    border: '1px solid',
+    borderRadius: '50%',
+
+    fontSize: 12,
+    fontWeight: 700
   },
 
   value: {
-    color: "#FFFFFF",
+    marginTop: 7,
     fontSize: 32,
-    fontWeight: "700"
-  }
+    lineHeight: 1,
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    letterSpacing: '-0.03em'
+  },
 
+  statusRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 7,
+    marginTop: 12
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%'
+  },
+
+  statusText: {
+    fontSize: 10,
+    color: 'var(--text-dim)'
+  }
 };
