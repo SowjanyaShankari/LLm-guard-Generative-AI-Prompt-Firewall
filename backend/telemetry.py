@@ -75,3 +75,23 @@ def log_security_event(user_id: str, role: str, direction: str, payload: str, ri
 
 # Run this once when the module loads to ensure the database exists
 init_db()
+
+def log_prompt(prompt: str, risk_score: int = 0, action: str = "ALLOW",
+               rule_triggered: str = "None",
+               user_id: str = "unknown",
+               role: str = "user",
+               direction: str = "inbound"):
+    """
+    Backward-compatible logging function used by main.py.
+    It forwards prompt activity to the Week 3 security logger.
+    """
+
+    return log_security_event(
+        user_id=user_id,
+        role=role,
+        direction=direction,
+        payload=prompt,
+        risk_score=risk_score,
+        action=action,
+        rule_triggered=rule_triggered
+    )
