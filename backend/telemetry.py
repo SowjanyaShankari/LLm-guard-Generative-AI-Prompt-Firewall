@@ -1,20 +1,20 @@
 """
-telemetry.py
+telemetry.py (Week 4 Final)
 
-Week 3: Logs bi-directional scanning activity (RBAC + Inbound/Outbound) persistently to SQLite.
+Logs bi-directional scanning activity to SQLite (Local UI) 
+and exports structured JSON streams for Enterprise SIEM ingestion.
 """
 
 import sqlite3
+import json
 from datetime import datetime
 
 DB_NAME = "llm_guard.db"
+SIEM_LOG_FILE = "siem_export.jsonl"
 
 def init_db():
-    """Initializes the SQLite database and creates the expanded Week 3 logs table."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    # Upgraded for Week 3: Added user_id, role, traffic_direction, and rule_triggered
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS security_logs_v2 (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,24 +31,24 @@ def init_db():
     conn.commit()
     conn.close()
 
+# --- WEEK 4 NEW: Enterprise SIEM Export ---
+def export_to_siem(log_entry: dict):
+    """
+    Appends the structured threat data as a JSON string to a flat file.
+    In production, a Splunk Forwarder or Datadog Agent reads this file 
+    asynchronously to prevent database locking.
+    """
+    try:
+        with open(SIEM_LOG_FILE, "a") as f:
+            # json.dumps converts the dictionary into a strict JSON string
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        print(f"[ERROR] Failed to write to SIEM log: {e}")
 
 def log_security_event(user_id: str, role: str, direction: str, payload: str, risk_score: int, action: str, rule_triggered: str = "None"):
-    """
-    Log the bi-directional scan details to the console and save persistently to SQLite.
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.utcnow().isoformat() + "Z" # ISO-8601 format for SIEM compatibility
 
-    # 1. Save to SQLite Database (Week 3 logic)
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO security_logs_v2 (timestamp, user_id, role, traffic_direction, payload, risk_score, action, rule_triggered)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (timestamp, user_id, role, direction, payload, risk_score, action, rule_triggered))
-    conn.commit()
-    conn.close()
-
-    # 2. Create the dictionary (Preserving the original format for the frontend)
+    # 1. Dictionary formatting
     log_entry = {
         "timestamp": timestamp,
         "user_id": user_id,
@@ -60,18 +60,27 @@ def log_security_event(user_id: str, role: str, direction: str, payload: str, ri
         "rule_triggered": rule_triggered
     }
 
-    # 3. Print to console (Upgraded terminal output)
+    # 2. Save to SQLite Database (Powers the React Dashboard)
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO security_logs_v2 (timestamp, user_id, role, traffic_direction, payload, risk_score, action, rule_triggered)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (timestamp, user_id, role, direction, payload, risk_score, action, rule_triggered))
+    conn.commit()
+    conn.close()
+
+    # 3. WEEK 4: Stream to Enterprise JSON file
+    export_to_siem(log_entry)
+
+    # 4. Print to console for local debugging
     print("\n========== LLM-Guard Security Log ==========")
     print(f"Time        : {log_entry['timestamp']}")
     print(f"User ID     : {log_entry['user_id']} ({log_entry['role']})")
     print(f"Direction   : {log_entry['traffic_direction']}")
-    print(f"Payload     : {log_entry['payload']}")
-    print(f"Risk Score  : {log_entry['risk_score']}")
-    print(f"Action      : {log_entry['action']}")
-    print(f"Rule        : {log_entry['rule_triggered']}")
+    print(f"Action      : {log_entry['action']} (Score: {log_entry['risk_score']})")
     print("============================================\n")
 
     return log_entry
 
-# Run this once when the module loads to ensure the database exists
 init_db()
