@@ -1,158 +1,197 @@
-import React from "react";
+import React from 'react';
 
 const STATUS_MAP = {
   open: {
-    label: "ONLINE",
-    color: "#22C55E"
+    label: 'ONLINE',
+    color: 'var(--accent-safe)',
+    description: 'All systems operational'
   },
   connecting: {
-    label: "CHECKING",
-    color: "#F59E0B"
+    label: 'CHECKING',
+    color: '#e0b84f',
+    description: 'Checking backend connection'
   },
   closed: {
-    label: "OFFLINE",
-    color: "#EF4444"
+    label: 'UNREACHABLE',
+    color: 'var(--accent-threat)',
+    description: 'Backend connection unavailable'
   }
 };
 
 export default function Topbar({
-  title,
-  healthStatus = "connecting"
+  title = 'Security Overview',
+  healthStatus = 'connecting'
 }) {
-  const status =
-    STATUS_MAP[healthStatus] || STATUS_MAP.connecting;
-
-  const now = new Date();
-
-  const date = now.toLocaleDateString();
-
-  const time = now.toLocaleTimeString();
+  const status = STATUS_MAP[healthStatus] ?? STATUS_MAP.connecting;
 
   return (
     <header style={styles.bar}>
-      <div>
-        <h2 style={styles.title}>
-          🛡 LLM-GUARD Security Operations Center
-        </h2>
+      {/* Page title */}
+      <div style={styles.titleArea}>
+        <div style={styles.breadcrumb}>
+          LLM-GUARD
+          <span style={styles.separator}>/</span>
+          SECURITY OPERATIONS
+        </div>
+
+        <h1 style={styles.title}>{title}</h1>
 
         <p style={styles.subtitle}>
-          {title} • Generative AI Prompt Firewall
+          Generative AI Prompt Firewall — SOC monitoring dashboard
         </p>
       </div>
 
-      <div style={styles.right}>
-
-        <div style={styles.box}>
+      {/* Right side controls */}
+      <div style={styles.rightArea}>
+        {/* Live monitoring indicator */}
+        <div style={styles.liveIndicator}>
           <span
             style={{
-              ...styles.dot,
+              ...styles.pulseDot,
               background: status.color
             }}
           />
 
           <div>
-            <div style={styles.small}>
-              Backend
+            <div style={styles.liveText}>
+              SYSTEM {status.label}
             </div>
 
-            <div style={styles.value}>
-              {status.label}
+            <div style={styles.liveDescription}>
+              {status.description}
             </div>
           </div>
         </div>
 
-        <div style={styles.box}>
-          <div style={styles.small}>
-            Date
-          </div>
-
-          <div style={styles.value}>
-            {date}
-          </div>
+        {/* Environment badge */}
+        <div style={styles.environment}>
+          <span style={styles.environmentDot} />
+          LOCAL
         </div>
-
-        <div style={styles.box}>
-          <div style={styles.small}>
-            Time
-          </div>
-
-          <div style={styles.value}>
-            {time}
-          </div>
-        </div>
-
-        <div style={styles.version}>
-          Version 1.0
-        </div>
-
       </div>
+
+      <style>{`
+        @keyframes guard-pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(50, 213, 131, 0.55);
+          }
+
+          70% {
+            box-shadow: 0 0 0 7px rgba(50, 213, 131, 0);
+          }
+
+          100% {
+            box-shadow: 0 0 0 0 rgba(50, 213, 131, 0);
+          }
+        }
+      `}</style>
     </header>
   );
 }
 
 const styles = {
   bar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    background: "#111827",
-    padding: "18px 28px",
-    borderBottom: "1px solid #1E293B",
-    flexWrap: "wrap"
+    minHeight: 82,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '16px 26px',
+    borderBottom: '1px solid var(--border-hair)',
+    background:
+      'linear-gradient(180deg, rgba(11,23,40,0.98), rgba(7,17,30,0.96))',
+    flexWrap: 'wrap',
+    gap: 16
+  },
+
+  titleArea: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2
+  },
+
+  breadcrumb: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 9,
+    letterSpacing: '0.12em',
+    color: 'var(--text-dim)',
+    marginBottom: 3
+  },
+
+  separator: {
+    margin: '0 7px',
+    color: 'var(--accent-safe)'
   },
 
   title: {
     margin: 0,
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "700"
+    fontSize: 20,
+    lineHeight: 1.2,
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    color: 'var(--text-primary)'
   },
 
   subtitle: {
-    marginTop: 6,
-    color: "#94A3B8",
-    fontSize: 14
+    margin: '3px 0 0',
+    fontSize: 11,
+    color: 'var(--text-muted)'
   },
 
-  right: {
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-    flexWrap: "wrap"
+  rightArea: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12
   },
 
-  box: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    background: "#1E293B",
-    padding: "10px 16px",
-    borderRadius: 12
+  liveIndicator: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 9,
+    padding: '8px 12px',
+    border: '1px solid var(--border-hair)',
+    borderRadius: 'var(--radius-sm)',
+    background: 'rgba(255,255,255,0.015)'
   },
 
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: "50%"
+  pulseDot: {
+    width: 8,
+    height: 8,
+    minWidth: 8,
+    borderRadius: '50%',
+    animation: 'guard-pulse 2s infinite'
   },
 
-  small: {
-    color: "#94A3B8",
-    fontSize: 11
+  liveText: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    color: 'var(--text-primary)'
   },
 
-  value: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: 14
+  liveDescription: {
+    fontSize: 9,
+    color: 'var(--text-dim)',
+    marginTop: 2
   },
 
-  version: {
-    background: "#22C55E",
-    color: "#FFFFFF",
-    padding: "10px 18px",
-    borderRadius: 30,
-    fontWeight: "600",
-    fontSize: 13
+  environment: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '8px 10px',
+    border: '1px solid var(--border-hair)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--text-muted)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 9,
+    letterSpacing: '0.06em'
+  },
+
+  environmentDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: 'var(--accent-safe)'
   }
 };
