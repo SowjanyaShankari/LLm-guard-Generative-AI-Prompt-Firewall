@@ -84,3 +84,48 @@ def log_security_event(user_id: str, role: str, direction: str, payload: str, ri
     return log_entry
 
 init_db()
+
+# --- WEEK 4: React Dashboard Fetch Functions (Frontend Hooks) ---
+
+def get_recent_logs(limit: int = 20):
+    """Fetches the most recent security logs for the live dashboard feed."""
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row # Allows accessing columns by name
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM security_logs_v2 ORDER BY id DESC LIMIT ?', (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+def get_metrics_summary():
+    """Calculates total scans and block rates for the UI metric cards."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM security_logs_v2')
+    total = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT COUNT(*) FROM security_logs_v2 WHERE action='BLOCK'")
+    blocked = cursor.fetchone()[0] or 0
+    conn.close()
+    
+    return {
+        "total_scans": total, 
+        "blocked_threats": blocked, 
+        "allowed": total - blocked
+    }
+
+def get_hourly_trend():
+    """Aggregates log counts per hour for the dashboard trend chart."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    # Groups timestamps by the YYYY-MM-DD HH portion
+    cursor.execute('''
+        SELECT substr(timestamp, 1, 13) as hour, COUNT(*) as count 
+        FROM security_logs_v2 
+        GROUP BY hour ORDER BY hour DESC LIMIT 24
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Formats back to a clean time string for the frontend graph
+    return [{"time": f"{row[0]}:00:00Z", "events": row[1]} for row in rows]
