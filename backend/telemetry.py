@@ -7,6 +7,7 @@ and exports structured JSON streams for Enterprise SIEM ingestion.
 
 import sqlite3
 import json
+import os
 from datetime import datetime
 
 DB_NAME = "llm_guard.db"
@@ -31,16 +32,21 @@ def init_db():
     conn.commit()
     conn.close()
 
-# --- WEEK 4 NEW: Enterprise SIEM Export ---
+# --- WEEK 4 NEW: Enterprise SIEM Export with Log Rotation ---
 def export_to_siem(log_entry: dict):
     """
-    Appends the structured threat data as a JSON string to a flat file.
-    In production, a Splunk Forwarder or Datadog Agent reads this file 
-    asynchronously to prevent database locking.
+    Appends structured threat data to a JSONL file. 
+    Includes automatic log rotation to prevent disk exhaustion.
     """
     try:
+        # If the file is larger than 5MB, rotate it out to prevent server crashes
+        max_size = 5 * 1024 * 1024 # 5 MB
+        if os.path.exists(SIEM_LOG_FILE) and os.path.getsize(SIEM_LOG_FILE) > max_size:
+            backup_name = f"siem_export_{datetime.now().strftime('%Y%m%d%H%M%S')}.jsonl.bak"
+            os.rename(SIEM_LOG_FILE, backup_name)
+            print(f"[SYSTEM] Rotated SIEM log to {backup_name}")
+
         with open(SIEM_LOG_FILE, "a") as f:
-            # json.dumps converts the dictionary into a strict JSON string
             f.write(json.dumps(log_entry) + "\n")
     except Exception as e:
         print(f"[ERROR] Failed to write to SIEM log: {e}")

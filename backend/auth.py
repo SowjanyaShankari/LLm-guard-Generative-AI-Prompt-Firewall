@@ -55,25 +55,43 @@ async def require_config_permissions(user: UserContext = Security(get_current_us
         )
     return user
 
-# --- RATE LIMITING ---
+# --- RATE LIMITING & PENALTY BOX ---
 request_history = {}
+lockout_cache = {} # Tracks users who are in the 5-minute timeout penalty box
 TIME_WINDOW = 60
+PENALTY_TIMEOUT = 300 # 5 minutes
 
 def check_rate_limit(user: UserContext):
     current_time = time.time()
-    client_identifier = user.user_id
+    client_id = user.user_id
     
-    if client_identifier not in request_history:
-        request_history[client_identifier] = []
+    # 1. Check if user is currently in the Penalty Box
+    if client_id in lockout_cache:
+        if current_time - lockout_cache[client_id] < PENALTY_TIMEOUT:
+            time_left = int(PENALTY_TIMEOUT - (current_time - lockout_cache[client_id]))
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail=f"Security Lockout: Too many requests. Try again in {time_left} seconds."
+            )
+        else:
+            # Penalty time is over, remove them from the box
+            del lockout_cache[client_id]
+            request_history[client_id] = [] # Reset their history
+            
+    # 2. Standard Rate Limiting Logic
+    if client_id not in request_history:
+        request_history[client_id] = []
         
-    recent_requests = [t for t in request_history[client_identifier] if current_time - t < TIME_WINDOW]
+    recent_requests = [t for t in request_history[client_id] if current_time - t < TIME_WINDOW]
     
     if len(recent_requests) >= user.rate_limit:
+        # Trip the alarm: Put them in the Penalty Box
+        lockout_cache[client_id] = current_time
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS, 
-            detail=f"Rate limit exceeded for role '{user.role}'. Maximum {user.rate_limit} requests per minute."
+            detail=f"Rate limit exceeded. You have been placed in a 5-minute security timeout."
         )
         
     recent_requests.append(current_time)
-    request_history[client_identifier] = recent_requests
+    request_history[client_id] = recent_requests
     return True
