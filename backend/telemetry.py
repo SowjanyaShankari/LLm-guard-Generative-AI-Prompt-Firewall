@@ -1,20 +1,21 @@
 """
-telemetry.py
+telemetry.py (Week 4 Final)
 
-Week 3: Logs bi-directional scanning activity (RBAC + Inbound/Outbound) persistently to SQLite.
+Logs bi-directional scanning activity to SQLite (Local UI) 
+and exports structured JSON streams for Enterprise SIEM ingestion.
 """
 
 import sqlite3
+import json
+import os
 from datetime import datetime
 
 DB_NAME = "llm_guard.db"
+SIEM_LOG_FILE = "siem_export.jsonl"
 
 def init_db():
-    """Initializes the SQLite database and creates the expanded Week 3 logs table."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    # Upgraded for Week 3: Added user_id, role, traffic_direction, and rule_triggered
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS security_logs_v2 (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,24 +32,29 @@ def init_db():
     conn.commit()
     conn.close()
 
+# --- WEEK 4 NEW: Enterprise SIEM Export with Log Rotation ---
+def export_to_siem(log_entry: dict):
+    """
+    Appends structured threat data to a JSONL file. 
+    Includes automatic log rotation to prevent disk exhaustion.
+    """
+    try:
+        # If the file is larger than 5MB, rotate it out to prevent server crashes
+        max_size = 5 * 1024 * 1024 # 5 MB
+        if os.path.exists(SIEM_LOG_FILE) and os.path.getsize(SIEM_LOG_FILE) > max_size:
+            backup_name = f"siem_export_{datetime.now().strftime('%Y%m%d%H%M%S')}.jsonl.bak"
+            os.rename(SIEM_LOG_FILE, backup_name)
+            print(f"[SYSTEM] Rotated SIEM log to {backup_name}")
+
+        with open(SIEM_LOG_FILE, "a") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        print(f"[ERROR] Failed to write to SIEM log: {e}")
 
 def log_security_event(user_id: str, role: str, direction: str, payload: str, risk_score: int, action: str, rule_triggered: str = "None"):
-    """
-    Log the bi-directional scan details to the console and save persistently to SQLite.
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.utcnow().isoformat() + "Z" # ISO-8601 format for SIEM compatibility
 
-    # 1. Save to SQLite Database (Week 3 logic)
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO security_logs_v2 (timestamp, user_id, role, traffic_direction, payload, risk_score, action, rule_triggered)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (timestamp, user_id, role, direction, payload, risk_score, action, rule_triggered))
-    conn.commit()
-    conn.close()
-
-    # 2. Create the dictionary (Preserving the original format for the frontend)
+    # 1. Dictionary formatting
     log_entry = {
         "timestamp": timestamp,
         "user_id": user_id,
@@ -60,38 +66,72 @@ def log_security_event(user_id: str, role: str, direction: str, payload: str, ri
         "rule_triggered": rule_triggered
     }
 
-    # 3. Print to console (Upgraded terminal output)
+    # 2. Save to SQLite Database (Powers the React Dashboard)
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO security_logs_v2 (timestamp, user_id, role, traffic_direction, payload, risk_score, action, rule_triggered)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (timestamp, user_id, role, direction, payload, risk_score, action, rule_triggered))
+    conn.commit()
+    conn.close()
+
+    # 3. WEEK 4: Stream to Enterprise JSON file
+    export_to_siem(log_entry)
+
+    # 4. Print to console for local debugging
     print("\n========== LLM-Guard Security Log ==========")
     print(f"Time        : {log_entry['timestamp']}")
     print(f"User ID     : {log_entry['user_id']} ({log_entry['role']})")
     print(f"Direction   : {log_entry['traffic_direction']}")
-    print(f"Payload     : {log_entry['payload']}")
-    print(f"Risk Score  : {log_entry['risk_score']}")
-    print(f"Action      : {log_entry['action']}")
-    print(f"Rule        : {log_entry['rule_triggered']}")
+    print(f"Action      : {log_entry['action']} (Score: {log_entry['risk_score']})")
     print("============================================\n")
 
     return log_entry
 
-# Run this once when the module loads to ensure the database exists
 init_db()
 
-def log_prompt(prompt: str, risk_score: int = 0, action: str = "ALLOW",
-               rule_triggered: str = "None",
-               user_id: str = "unknown",
-               role: str = "user",
-               direction: str = "inbound"):
-    """
-    Backward-compatible logging function used by main.py.
-    It forwards prompt activity to the Week 3 security logger.
-    """
+# --- WEEK 4: React Dashboard Fetch Functions (Frontend Hooks) ---
 
-    return log_security_event(
-        user_id=user_id,
-        role=role,
-        direction=direction,
-        payload=prompt,
-        risk_score=risk_score,
-        action=action,
-        rule_triggered=rule_triggered
-    )
+def get_recent_logs(limit: int = 20):
+    """Fetches the most recent security logs for the live dashboard feed."""
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row # Allows accessing columns by name
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM security_logs_v2 ORDER BY id DESC LIMIT ?', (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+def get_metrics_summary():
+    """Calculates total scans and block rates for the UI metric cards."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM security_logs_v2')
+    total = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT COUNT(*) FROM security_logs_v2 WHERE action='BLOCK'")
+    blocked = cursor.fetchone()[0] or 0
+    conn.close()
+    
+    return {
+        "total_scans": total, 
+        "blocked_threats": blocked, 
+        "allowed": total - blocked
+    }
+
+def get_hourly_trend():
+    """Aggregates log counts per hour for the dashboard trend chart."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    # Groups timestamps by the YYYY-MM-DD HH portion
+    cursor.execute('''
+        SELECT substr(timestamp, 1, 13) as hour, COUNT(*) as count 
+        FROM security_logs_v2 
+        GROUP BY hour ORDER BY hour DESC LIMIT 24
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Formats back to a clean time string for the frontend graph
+    return [{"time": f"{row[0]}:00:00Z", "events": row[1]} for row in rows]
