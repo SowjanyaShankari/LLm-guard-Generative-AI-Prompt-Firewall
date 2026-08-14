@@ -1,10 +1,19 @@
 from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+<<<<<<< HEAD
 from backend.validation import validate_prompt
 from backend.rules import calculate_risk, enforce_firewall_rules
 from backend.telemetry import log_security_event, get_recent_logs, get_metrics_summary, get_hourly_trend
 from backend.auth import get_current_user, check_rate_limit, UserContext
+=======
+from validation import validate_prompt
+from rules import calculate_risk, enforce_firewall_rules
+from telemetry import log_security_event, get_recent_logs, get_metrics_summary, get_hourly_trend
+from auth import get_current_user, check_rate_limit, UserContext
+from fastapi import Body
+from settings import SETTINGS
+>>>>>>> dfed237 (Week 4 RBAC, telemetry and settings dashboard completed)
 
 app = FastAPI(title="LLM-Guard", description="Generative AI Prompt Firewall", version="1.0.0")
 
@@ -31,6 +40,30 @@ def home():
 def health():
     return {"status": "Healthy", "service": "LLM-Guard", "version": "1.0.0"}
 
+<<<<<<< HEAD
+=======
+@app.get("/api/metrics")
+async def metrics(
+    user: UserContext = Security(get_current_user)
+):
+    check_rate_limit(user)
+    return get_metrics_summary()
+
+@app.get("/api/alerts")
+async def alerts(
+    user: UserContext = Security(get_current_user)
+):
+    check_rate_limit(user)
+    return get_recent_logs()
+
+@app.get("/api/trend")
+async def trend(
+    user: UserContext = Security(get_current_user)
+):
+    check_rate_limit(user)
+    return get_hourly_trend()
+
+>>>>>>> dfed237 (Week 4 RBAC, telemetry and settings dashboard completed)
 
 @app.post("/scan")
 async def scan_prompt(request: PromptRequest, user: UserContext = Security(get_current_user)):
@@ -62,6 +95,7 @@ async def scan_prompt(request: PromptRequest, user: UserContext = Security(get_c
     return {"status": "success", "prompt": safe_prompt, "validation": validation, "rules": rules, "log": log}
 
 
+<<<<<<< HEAD
 @app.get("/api/alerts")
 def api_alerts(limit: int = 20, user: UserContext = Security(get_current_user)):
     return get_recent_logs(limit)
@@ -75,3 +109,27 @@ def api_metrics(user: UserContext = Security(get_current_user)):
 @app.get("/api/trend")
 def api_trend(user: UserContext = Security(get_current_user)):
     return get_hourly_trend()
+=======
+# ==========================
+# WEEK 4 SETTINGS APIs
+# ==========================
+
+@app.get("/api/settings")
+async def get_settings(
+    user: UserContext = Security(get_current_user)
+):
+    return SETTINGS
+
+
+@app.post("/api/settings")
+async def update_settings(
+    payload: dict = Body(...),
+    user: UserContext = Security(get_current_user)
+):
+    SETTINGS.update(payload)
+
+    return {
+        "message": "Settings updated successfully",
+        "settings": SETTINGS
+    }
+>>>>>>> dfed237 (Week 4 RBAC, telemetry and settings dashboard completed)
