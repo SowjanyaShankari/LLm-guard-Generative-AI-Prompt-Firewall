@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 """
 Pydantic schemas for LLM-Guard proxy.
 Defines request/response contracts.
@@ -86,7 +86,6 @@ class SecurityEvent(BaseModel):
     ml_confidence: float
     decision: str
     prompt_hash: str
-=======
 """
 Pydantic schemas for LLM-Guard proxy.
 Defines request/response contracts.
@@ -174,5 +173,4 @@ class SecurityEvent(BaseModel):
     ml_confidence: float
     decision: str
     prompt_hash: str
->>>>>>> dfed237 (Week 4 RBAC, telemetry and settings dashboard completed)
     severity: str  # "info", "warning", "critical"

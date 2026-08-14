@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 """
 Core reverse proxy logic.
 Orchestrates DLP → ML → Auth → LLM pipeline.
@@ -246,7 +246,6 @@ class LLMGuardProxy:
     
     def get_metrics(self) -> Dict[str, Any]:
         """Return proxy metrics for M6 (QA/monitoring)."""
-=======
 """
 Core reverse proxy logic.
 Orchestrates DLP → ML → Auth → LLM pipeline.
@@ -494,5 +493,4 @@ class LLMGuardProxy:
     
     def get_metrics(self) -> Dict[str, Any]:
         """Return proxy metrics for M6 (QA/monitoring)."""
->>>>>>> dfed237 (Week 4 RBAC, telemetry and settings dashboard completed)
         return self.metrics.copy()
