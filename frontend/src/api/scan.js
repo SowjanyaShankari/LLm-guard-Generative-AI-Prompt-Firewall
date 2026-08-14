@@ -21,9 +21,9 @@ export function checkHealth() {
   return request('/health');
 }
 
-export function postScan(prompt, direction = 'inbound') {
+export function postScan(prompt) {
   return request('/scan', {
     method: 'POST',
-    body: JSON.stringify({ prompt, direction })
+    body: JSON.stringify({ prompt })
   });
 }

@@ -1,8 +1,7 @@
 """
-auth.py (Week 4 Final)
+auth.py
 
-Role-Based Access Control (RBAC), Dynamic Rate Limiting, 
-and Configuration Tuning Authorization.
+Week 3: Role-Based Access Control (RBAC) and Dynamic Rate Limiting
 """
 
 from fastapi import Security, HTTPException, status
@@ -10,9 +9,12 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 import time
 
+# --- AUTHENTICATION & IDENTITY (Week 3 RBAC Upgrade) ---
+
+# Defines the header our proxy will look for in incoming requests
 api_key_header = APIKeyHeader(name="X-API-Key")
 
-# Simulated Identity Provider (IdP) Database
+# Simulated Identity Provider (IdP) Database replacing the single API_KEY
 USER_DATABASE = {
     "LLM-GUARD-2026-ADMIN": {"user_id": "admin_01", "role": "admin", "rate_limit": 100},
     "LLM-GUARD-2026-USER": {"user_id": "dev_user_01", "role": "standard", "rate_limit": 5},
@@ -25,15 +27,23 @@ class UserContext(BaseModel):
     rate_limit: int
 
 async def get_current_user(api_key: str = Security(api_key_header)) -> UserContext:
+    """
+    Validates the API key and returns the user's RBAC identity context.
+    """
     user_data = USER_DATABASE.get(api_key)
+    
     if not user_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid or missing API Key. Access Denied."
         )
+        
     return UserContext(**user_data)
 
 async def require_admin(user: UserContext = Security(get_current_user)) -> UserContext:
+    """
+    Strict RBAC dependency. Use this on endpoints that only Admins can access.
+    """
     if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
@@ -41,57 +51,39 @@ async def require_admin(user: UserContext = Security(get_current_user)) -> UserC
         )
     return user
 
-# --- WEEK 4 NEW: Dynamic Tuning Authorization ---
-async def require_config_permissions(user: UserContext = Security(get_current_user)) -> UserContext:
-    """
-    Strict RBAC dependency for Week 4. Only allows Admins and SOC Analysts 
-    to adjust the AI Firewall sensitivity sliders from the React dashboard.
-    """
-    allowed_roles = ["admin", "security_auditor"]
-    if user.role not in allowed_roles:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="RBAC Violation: You do not have permission to tune firewall guardrails."
-        )
-    return user
 
-# --- RATE LIMITING & PENALTY BOX ---
+# --- RATE LIMITING (Upgraded for Week 3 Dynamic Limits) ---
+# Store request timestamps per user_id instead of IP/Key
 request_history = {}
-lockout_cache = {} # Tracks users who are in the 5-minute timeout penalty box
-TIME_WINDOW = 60
-PENALTY_TIMEOUT = 300 # 5 minutes
+TIME_WINDOW = 60 # 60 seconds
 
 def check_rate_limit(user: UserContext):
+    """
+    Checks if a client has exceeded their specific RBAC allowed requests per minute.
+    Raises an HTTP 429 error if the limit is reached.
+    """
     current_time = time.time()
-    client_id = user.user_id
+    client_identifier = user.user_id
     
-    # 1. Check if user is currently in the Penalty Box
-    if client_id in lockout_cache:
-        if current_time - lockout_cache[client_id] < PENALTY_TIMEOUT:
-            time_left = int(PENALTY_TIMEOUT - (current_time - lockout_cache[client_id]))
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, 
-                detail=f"Security Lockout: Too many requests. Try again in {time_left} seconds."
-            )
-        else:
-            # Penalty time is over, remove them from the box
-            del lockout_cache[client_id]
-            request_history[client_id] = [] # Reset their history
-            
-    # 2. Standard Rate Limiting Logic
-    if client_id not in request_history:
-        request_history[client_id] = []
+    # Initialize the client's history if they are new
+    if client_identifier not in request_history:
+        request_history[client_identifier] = []
         
-    recent_requests = [t for t in request_history[client_id] if current_time - t < TIME_WINDOW]
+    # Filter out old requests outside the 60-second window
+    recent_requests = [t for t in request_history[client_identifier] if current_time - t < TIME_WINDOW]
     
+    # Block if they hit the maximum limit assigned to their specific role
     if len(recent_requests) >= user.rate_limit:
-        # Trip the alarm: Put them in the Penalty Box
-        lockout_cache[client_id] = current_time
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS, 
-            detail=f"Rate limit exceeded. You have been placed in a 5-minute security timeout."
+            detail=f"Rate limit exceeded for role '{user.role}'. Maximum {user.rate_limit} requests per minute."
         )
         
+    # Add the current request timestamp and update history
     recent_requests.append(current_time)
-    request_history[client_id] = recent_requests
+    request_history[client_identifier] = recent_requests
+    
     return True
+
+    # Backward compatibility for existing backend endpoints
+verify_api_key = get_current_user

@@ -3,12 +3,7 @@
 // here once so components never have to think about it.
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-<<<<<<< HEAD
 const API_KEY = import.meta.env.VITE_API_KEY || '';
-=======
-const API_KEY = 'LLM-GUARD-2026-ADMIN';
-console.log("API KEY =", API_KEY);
->>>>>>> dfed237 (Week 4 RBAC, telemetry and settings dashboard completed)
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
