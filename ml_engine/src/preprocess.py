@@ -17,7 +17,7 @@ def load_and_clean():
     print("rows loaded:", len(df))
 
     # Remove missing values
-    df = df.dropna(subset=["text", "label"])
+    df = df.dropna(subset=["text", "label", "split"])
 
     # Clean extra spaces
     df["text"] = (
@@ -31,7 +31,9 @@ def load_and_clean():
     df = df[~df["text"].str.lower().duplicated()]
 
     # 1 = injection, 0 = benign
-    df["y"] = (df["label"].str.lower() == "injection").astype(int)
+    df["y"] = (
+        df["label"].astype(str).str.lower().str.strip() == "injection"
+    ).astype(int)
 
     print("rows after cleaning:", len(df))
     return df.reset_index(drop=True)
@@ -40,8 +42,8 @@ def load_and_clean():
 def get_splits():
     df = load_and_clean()
 
-    train_all = df[df["split"].str.lower() == "train"]
-    test = df[df["split"].str.lower() == "test"]
+    train_all = df[df["split"].astype(str).str.lower() == "train"]
+    test = df[df["split"].astype(str).str.lower() == "test"]
 
     train, val = train_test_split(
         train_all,
