@@ -7,3 +7,6 @@ __pycache__/
 
 # Mac system files (if anyone uses a Mac)
 .DS_Store
+
+#node
+node_modules/

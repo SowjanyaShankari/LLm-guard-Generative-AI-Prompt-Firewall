@@ -44,7 +44,7 @@ X_test = make_features(test)
 
 print("feature count:", X_train.shape[1])
 
-# Tuned C parameter
+# WEEK 4: Tuned C parameter
 C_value = 0.8
 svm = LinearSVC(C=C_value, class_weight="balanced", random_state=SEED, max_iter=2000)
 model = CalibratedClassifierCV(svm, cv=3)
@@ -58,7 +58,7 @@ test_scores = model.predict_proba(X_test)[:, 1]
 y_test = test["y"].to_numpy()
 y_val = val["y"].to_numpy()
 
-# Threshold tuning on validation set
+# WEEK 4: Threshold tuning on validation set
 print("\nTuning threshold on validation set...")
 best_threshold = 0.5
 best_f1 = 0
