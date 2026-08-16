@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.validation import validate_prompt
 from backend.rules import calculate_risk, enforce_firewall_rules
@@ -40,7 +40,12 @@ app.add_middleware(
 # ============================================================
 
 class PromptRequest(BaseModel):
-    prompt: str
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=10000,
+        description="Prompt to be scanned by LLM-Guard"
+    )
 
 
 # ============================================================
@@ -73,18 +78,7 @@ async def scan_prompt(
     request: PromptRequest,
     user: UserContext = Depends(get_current_user)
 ):
-
-    # --------------------------------------------------------
-    # RBAC / USER AUTHENTICATION
-    # --------------------------------------------------------
-
-    # The API key is validated by get_current_user().
-    # It also provides user_id, role and rate_limit.
-    #
-    # Example:
-    # admin       -> 100 requests/minute
-    # standard    ->   5 requests/minute
-    # SOC analyst ->  50 requests/minute
+    
 
     # --------------------------------------------------------
     # DYNAMIC RATE LIMITING
@@ -92,11 +86,15 @@ async def scan_prompt(
 
     check_rate_limit(user)
 
+
     # --------------------------------------------------------
-    # FIREWALL RULES
+    # FIREWALL INSPECTION
     # --------------------------------------------------------
 
-    firewall_check = enforce_firewall_rules(request.prompt)
+    firewall_check = enforce_firewall_rules(
+        request.prompt
+    )
+
 
     # --------------------------------------------------------
     # BLOCKED PROMPT
@@ -116,38 +114,51 @@ async def scan_prompt(
 
         return {
             "status": "blocked",
+
             "reason": firewall_check["reason"],
+
             "rules": {
                 "action": "BLOCK",
                 "risk_score": 100
             },
+
             "validation": {
+                "safe": False,
                 "reason": firewall_check["reason"],
                 "matched_keywords": []
             },
+
             "log": log
         }
 
+
     # --------------------------------------------------------
-    # SAFE PROMPT
+    # SAFE / NON-BLOCKED PROMPT
     # --------------------------------------------------------
 
     safe_prompt = firewall_check["payload"]
 
+
     # --------------------------------------------------------
-    # VALIDATION
+    # PROMPT VALIDATION
     # --------------------------------------------------------
 
-    validation = validate_prompt(safe_prompt)
+    validation = validate_prompt(
+        safe_prompt
+    )
+
 
     # --------------------------------------------------------
     # RISK CALCULATION
     # --------------------------------------------------------
 
-    rules = calculate_risk(validation)
+    rules = calculate_risk(
+        validation
+    )
+
 
     # --------------------------------------------------------
-    # TELEMETRY LOGGING
+    # TELEMETRY
     # --------------------------------------------------------
 
     log = log_security_event(
@@ -160,14 +171,19 @@ async def scan_prompt(
         rule_triggered="None"
     )
 
+
     # --------------------------------------------------------
-    # RESPONSE
+    # FINAL RESPONSE
     # --------------------------------------------------------
 
     return {
         "status": "success",
+
         "prompt": safe_prompt,
+
         "validation": validation,
+
         "rules": rules,
+
         "log": log
     }
