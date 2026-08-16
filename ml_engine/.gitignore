@@ -3,3 +3,8 @@ __pycache__/
 .venv/
 .pytest_cache/
 .DS_Store
+node_modules
+dist
+.env
+.env.local
+llm_guard.db

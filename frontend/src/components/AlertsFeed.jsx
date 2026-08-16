@@ -30,11 +30,48 @@ const SEVERITY_CONFIG = {
   }
 };
 
+function getSeverity(alert) {
+  return (
+    SEVERITY_CONFIG[alert?.severity] ??
+    SEVERITY_CONFIG.low
+  );
+}
+
+function getAlertType(alert) {
+  if (alert?.type) return alert.type;
+
+  if (alert?.rule_triggered) {
+    return alert.rule_triggered;
+  }
+
+  return 'Security Alert';
+}
+
+function getAlertSummary(alert) {
+  if (alert?.summary) return alert.summary;
+
+  if (alert?.reason) return alert.reason;
+
+  return 'Suspicious activity detected.';
+}
+
+function getAlertTime(alert) {
+  if (alert?.time) return alert.time;
+
+  if (alert?.timestamp) return alert.timestamp;
+
+  return 'Just now';
+}
+
 export default function AlertsFeed({ alerts = [] }) {
+  const visibleAlerts = alerts.slice(0, 6);
+
   return (
     <section style={styles.panel}>
-      {/* Header */}
+
+      {/* HEADER */}
       <div style={styles.header}>
+
         <div>
           <div style={styles.eyebrow}>
             SECURITY EVENTS
@@ -49,39 +86,59 @@ export default function AlertsFeed({ alerts = [] }) {
           </p>
         </div>
 
-        <div style={styles.count}>
+        <div
+          style={{
+            ...styles.count,
+            ...(alerts.length > 0
+              ? styles.countActive
+              : styles.countSafe)
+          }}
+        >
           {alerts.length}
         </div>
+
       </div>
 
-      {/* Alerts */}
+      {/* EMPTY STATE */}
       {alerts.length === 0 ? (
+
         <div style={styles.empty}>
+
           <div style={styles.emptyIcon}>
             ✓
           </div>
 
           <div style={styles.emptyTitle}>
-            No security threats detected
+            No Security Threats Detected
           </div>
 
           <div style={styles.emptyText}>
             Flagged prompts will appear here automatically.
           </div>
+
+          <div style={styles.monitoringBadge}>
+            <span style={styles.monitoringDot} />
+            MONITORING ACTIVE
+          </div>
+
         </div>
+
       ) : (
+
+        /* ALERT LIST */
         <div style={styles.list}>
-          {alerts.slice(0, 6).map((alert, index) => {
-            const severity =
-              SEVERITY_CONFIG[alert.severity] ??
-              SEVERITY_CONFIG.low;
+
+          {visibleAlerts.map((alert, index) => {
+
+            const severity = getSeverity(alert);
 
             return (
               <div
-                key={alert.id ?? index}
+                key={alert?.id ?? index}
                 style={styles.alert}
               >
-                {/* Severity indicator */}
+
+                {/* SEVERITY BAR */}
                 <div
                   style={{
                     ...styles.severityBar,
@@ -89,20 +146,23 @@ export default function AlertsFeed({ alerts = [] }) {
                   }}
                 />
 
-                {/* Icon */}
+                {/* ICON */}
                 <div
                   style={{
                     ...styles.icon,
                     color: severity.color,
-                    background: severity.background
+                    background: severity.background,
+                    border: `1px solid ${severity.color}`
                   }}
                 >
                   {severity.icon}
                 </div>
 
-                {/* Main content */}
+                {/* CONTENT */}
                 <div style={styles.content}>
+
                   <div style={styles.topRow}>
+
                     <span
                       style={{
                         ...styles.severity,
@@ -113,27 +173,33 @@ export default function AlertsFeed({ alerts = [] }) {
                     </span>
 
                     <span style={styles.time}>
-                      {alert.time}
+                      {getAlertTime(alert)}
                     </span>
+
                   </div>
 
                   <div style={styles.type}>
-                    {alert.type || 'Security Alert'}
+                    {getAlertType(alert)}
                   </div>
 
                   <div style={styles.summary}>
-                    {alert.summary || 'Suspicious activity detected.'}
+                    {getAlertSummary(alert)}
                   </div>
+
                 </div>
+
               </div>
             );
           })}
+
         </div>
       )}
 
-      {/* Footer */}
+      {/* FOOTER */}
       {alerts.length > 0 && (
+
         <div style={styles.footer}>
+
           <span>
             Showing {Math.min(alerts.length, 6)} of {alerts.length} alerts
           </span>
@@ -142,13 +208,18 @@ export default function AlertsFeed({ alerts = [] }) {
             <span style={styles.liveDot} />
             LIVE SESSION
           </span>
+
         </div>
+
       )}
+
     </section>
   );
 }
 
+
 const styles = {
+
   panel: {
     flex: '1 1 340px',
     minWidth: 300,
@@ -192,15 +263,26 @@ const styles = {
   count: {
     minWidth: 30,
     height: 30,
+    padding: '0 8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
-    background: 'var(--accent-threat-dim)',
-    color: 'var(--accent-threat)',
     fontFamily: 'var(--font-mono)',
     fontSize: 11,
     fontWeight: 700
+  },
+
+  countActive: {
+    background: 'var(--accent-threat-dim)',
+    color: 'var(--accent-threat)',
+    border: '1px solid var(--accent-threat)'
+  },
+
+  countSafe: {
+    background: 'var(--accent-safe-dim)',
+    color: 'var(--accent-safe)',
+    border: '1px solid var(--accent-safe)'
   },
 
   list: {
@@ -217,7 +299,8 @@ const styles = {
     overflow: 'hidden',
     border: '1px solid var(--border-hair)',
     borderRadius: 'var(--radius-sm)',
-    background: 'rgba(255,255,255,0.015)'
+    background: 'rgba(255,255,255,0.015)',
+    transition: 'border-color 0.2s ease, background 0.2s ease'
   },
 
   severityBar: {
@@ -262,7 +345,8 @@ const styles = {
   time: {
     fontFamily: 'var(--font-mono)',
     fontSize: 8,
-    color: 'var(--text-dim)'
+    color: 'var(--text-dim)',
+    whiteSpace: 'nowrap'
   },
 
   type: {
@@ -279,6 +363,7 @@ const styles = {
     marginTop: 2,
     color: 'var(--text-muted)',
     fontSize: 9,
+    lineHeight: 1.4,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis'
@@ -304,6 +389,7 @@ const styles = {
     borderRadius: '50%',
     background: 'var(--accent-safe-dim)',
     color: 'var(--accent-safe)',
+    border: '1px solid var(--accent-safe)',
     fontSize: 20,
     fontWeight: 700,
     marginBottom: 10
@@ -319,6 +405,27 @@ const styles = {
     marginTop: 4,
     color: 'var(--text-dim)',
     fontSize: 10
+  },
+
+  monitoringBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 14,
+    padding: '5px 8px',
+    borderRadius: 4,
+    border: '1px solid var(--border-hair)',
+    color: 'var(--text-dim)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 8,
+    letterSpacing: '0.06em'
+  },
+
+  monitoringDot: {
+    width: 5,
+    height: 5,
+    borderRadius: '50%',
+    background: 'var(--accent-safe)'
   },
 
   footer: {

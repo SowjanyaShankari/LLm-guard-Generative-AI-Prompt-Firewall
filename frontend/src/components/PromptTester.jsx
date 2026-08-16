@@ -200,6 +200,18 @@ export default function PromptTester({ onSubmit, submitting }) {
                     <span style={styles.resultLabel}>
                       Analysis
                     </span>
+                    
+                    {lastResult.validation?.matched_keywords?.length > 0 && (
+  <div style={styles.resultRow}>
+    <span style={styles.resultLabel}>
+      Matched Rules
+    </span>
+
+    <span style={styles.resultValue}>
+      {lastResult.validation.matched_keywords.join(', ')}
+    </span>
+  </div>
+)}
 
                     <span style={styles.resultValue}>
                       {lastResult.validation.reason}

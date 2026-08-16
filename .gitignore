@@ -1,12 +1,10 @@
-# Python Cache Files
+.venv/
 __pycache__/
-*.pyc
-
-# Environment Variables (for future use)
-.env
-
-# Mac system files (if anyone uses a Mac)
+*.py[cod]
+.pytest_cache/
 .DS_Store
-
-#node
 node_modules/
+dist/
+.env
+.env.local
+llm_guard.db

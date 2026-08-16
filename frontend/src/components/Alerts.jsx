@@ -217,12 +217,6 @@ const styles = {
     margin: 0,
     fontSize: 12,
     color: 'var(--text-muted)'
-  },
-
-  time: {
-    fontSize: 10,
-    color: 'var(--text-dim)',
-    whiteSpace: 'nowrap'
   }
-
+  
 };

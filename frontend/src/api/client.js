@@ -1,9 +1,10 @@
 // Thin wrapper around fetch(). Every /scan call on this backend requires
-// an x-api-key header (see backend/auth.py verify_api_key) — attach it
-// here once so components never have to think about it.
+// an x-api-key header — attach it here once so components never have to think about it.
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_KEY = import.meta.env.VITE_API_KEY || '';
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+const API_KEY = 'LLM-GUARD-2026-ADMIN';
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -17,7 +18,9 @@ async function request(path, options = {}) {
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`Request to ${path} failed: ${res.status} ${res.statusText} ${body}`);
+    throw new Error(
+      `Request to ${path} failed: ${res.status} ${res.statusText} ${body}`
+    );
   }
 
   return res.json();
